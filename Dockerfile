@@ -1,14 +1,11 @@
-# Use a lightweight web server image
-FROM nginx:alpine
+FROM golang:1.26-alpine AS build
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o /out/atw-dashboard ./cmd/server
 
-# Copy all files from the current directory into nginx's web root
-COPY . /usr/share/nginx/html
-
-# Expose port 8080
+FROM gcr.io/distroless/static-debian12:nonroot
+COPY --from=build /out/atw-dashboard /atw-dashboard
 EXPOSE 8080
-
-# Configure nginx to listen on port 8080
-RUN sed -i 's/listen       80;/listen       8080;/g' /etc/nginx/conf.d/default.conf
-
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+ENTRYPOINT ["/atw-dashboard", "-config", "/etc/atw-dashboard/config.yaml"]

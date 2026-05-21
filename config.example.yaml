@@ -1,0 +1,20 @@
+# Example config.yaml for atw-dashboard.
+# Mount this from a Kubernetes ConfigMap at /etc/atw-dashboard/config.yaml.
+
+listen_addr: ":8080"
+
+# Operator nickname to track on the legacy-api.arpa.li leaderboard.
+nickname: "your-nickname"
+
+# Optional. Defaults shown.
+leaderboard_interval: 5m
+reconnect_min: 1s
+reconnect_max: 60s
+
+# Warriors the backend connects to. URLs are reachable from inside the cluster
+# only — they no longer need to be publicly exposed.
+warriors:
+  - name: warrior-1
+    url: http://warrior-1.warriors.svc.cluster.local:8001
+  - name: warrior-2
+    url: http://warrior-2.warriors.svc.cluster.local:8001

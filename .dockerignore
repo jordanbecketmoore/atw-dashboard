@@ -1,0 +1,9 @@
+.git
+.gitignore
+.dockerignore
+bin/
+**/.DS_Store
+screenshots/
+*.md
+deploy/
+config.yaml

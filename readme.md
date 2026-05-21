@@ -1,46 +1,97 @@
 # Dashboard for Archive Team Warrior
+
 ![Screenshot of a dashboard with multiple line graphs for bandwidth](screenshots/screenshot.png)
 
-You got all excited about setting up Archive Team Warrior instances and helping out, but it's too much of a pain to make sure everything is running properly?
+A live dashboard for a fleet of Archive Team Warriors. Originally a pure
+client-side SPA, this version splits into a Go backend and a static frontend.
+The backend runs in the same Kubernetes cluster as the warriors and connects to
+them over the cluster's internal network — so the warriors no longer need to be
+publicly exposed. The frontend talks only to the backend over REST + SSE.
 
-I did, and instead of trying to hook into Grafana or any other more established solutions, I made my own.
+## Architecture
 
-## Features
+```
+                            ┌───────────────────────────────┐
+   public Ingress ───────► │  atw-dashboard (Go binary)     │
+                            │                                │
+                            │  GET /            embedded     │
+                            │                   frontend     │
+                            │  GET /api/state   snapshot     │
+                            │  GET /events      SSE stream   │
+                            │  GET /healthz                  │
+                            └────────────────┬───────────────┘
+                                             │ ws (cluster-internal)
+                                             ▼
+                            ┌───────────────────────────────┐
+                            │  warriors (private Services)  │
+                            └───────────────────────────────┘
+```
 
-* Reconnects to disconnected instances automatically.
+- **Backend** (`cmd/server`, `internal/*`): one goroutine per warrior holds a
+  SockJS-over-WebSocket connection to `ws://<warrior>/websocket`, parses
+  `bandwidth`, `item.output`, `project.refresh` events into an in-memory state
+  hub, and fans them out to browser clients via Server-Sent Events. A
+  leaderboard poller hits `legacy-api.arpa.li` every 5 min for each active
+  project and computes the operator's rank server-side.
+- **Frontend** (`web/`): static HTML/JS embedded into the binary via
+  `//go:embed`. On load, fetches `/api/state` for an initial render, then opens
+  `EventSource('/events')` for live updates. No third-party JS dependencies
+  (the third-party `smoothie.js` chart library is vendored locally).
 
-* Instances having issues are highlighted in red.
+## Configuration
 
-* Displays each of your projects on the left: how much data you've saved, and your position in the leaderboard.
+The backend reads YAML from `-config` (default `/etc/atw-dashboard/config.yaml`).
+See `config.example.yaml`:
 
-* An aggregate log that shows your instances are in fact doing work. 
+```yaml
+listen_addr: ":8080"
+nickname: "your-nickname"          # operator nick used for leaderboard lookups
+leaderboard_interval: 5m
+warriors:
+  - name: warrior-1
+    url: http://warrior-1.warriors.svc.cluster.local:8001
+  - name: warrior-2
+    url: http://warrior-2.warriors.svc.cluster.local:8001
+```
 
-* Use user.css to style your dashboard how you want.
+## Local development
 
-* Responsive design works on mobile and tablets.
+```sh
+make tidy
+make test
+make build           # produces bin/atw-dashboard
+make run-local CONFIG=$PWD/config.yaml
+```
 
-* Settings saved automatically.
+Or with Docker:
 
-## Usage
+```sh
+make docker
+make run CONFIG=$PWD/config.yaml
+```
 
-When the page loads, it will ask you for information. 
+Open <http://localhost:8080>.
 
-* Enter the NickName you are using to track your instances.
+## Kubernetes deploy
 
-* Enter your list of instance names and urls and press save. 
+Manifests in `deploy/k8s/`:
 
-* Manage your instance by clicking it's name, where you will be taken to it's normal management page where you can adjust settings or shut down.
+```sh
+# edit deploy/k8s/configmap.yaml with your nickname and warrior URLs
+kubectl apply -f deploy/k8s/
+```
 
-* Add additional instances using the add buton. Change the nickname you are tracking using change nickname.
+Notes:
 
-* Clear settings and restart using "Reset"
+- The hub is in-memory and warrior connections are stateful — keep `replicas: 1`.
+- The Ingress example sets nginx annotations to disable proxy buffering and
+  raise the read timeout so SSE connections survive.
+- Warriors should be reachable only inside the cluster. Drop any public
+  Ingress / LoadBalancer that previously fronted them.
 
-* Enjoy your dashboard!
+## Theming
 
-## Extra stuff
-
-* Place custom styles in user.css
-
-* Use the included themes by copying over the user.css
-
-* Adjust colors in the console: Instance names are css classes in the log in the sidebar. Style a line for an instance using '#console p:has(.your-instance-name) {}'. The message text and timestamp are 'msg' and 'timestamp' respectively. The instance name itself is '.instName'
+Styling lives in `web/assets/user/user.css`. Drop in one of the theme files in
+`web/assets/user/themes/` (lcars-picard, lcars-tng, light, metro) by copying
+its `user.css` over the default. Per-instance log lines are tagged with the
+warrior name as a CSS class (`#console p:has(.warrior-1) { ... }`).
