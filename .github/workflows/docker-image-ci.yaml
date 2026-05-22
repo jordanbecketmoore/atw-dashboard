@@ -1,0 +1,26 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ "*" ]
+    tags:
+      - "v*.*.*"
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build, Tag & Publish Image to DockerHub
+      uses: dinushchathurya/build-tag-push-action@v1.2.1
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+        context: ./
+        file: ./Dockerfile
+        repoOwner: ${{ secrets.DOCKER_USERNAME }}
+        repository:  atw-dashboard
+        tag: ${{ github.ref_name == 'main' && 'latest' || github.ref_name }}
