@@ -11,9 +11,7 @@ spec:
     {{- end }}
   {{- end }}
   parentRefs:
-  {{- range .Values.dashboard.httproute.parentRefs }}
-  {{ . | toYaml | nindent 4 }}
-  {{- end }}
+{{- toYaml .Values.dashboard.httproute.parentRefs | nindent 2 }}
   rules:
   - backendRefs:
     - group: ""
