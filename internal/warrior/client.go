@@ -82,6 +82,7 @@ func connectOnce(ctx context.Context, name, wsURL string, h *hub.Hub) error {
 		return fmt.Errorf("dial: %w", err)
 	}
 	defer conn.CloseNow()
+	conn.SetReadLimit(1 << 20)
 
 	h.SetConnected(name, true, "connected")
 	h.AppendConsole(name, "Connected.")
