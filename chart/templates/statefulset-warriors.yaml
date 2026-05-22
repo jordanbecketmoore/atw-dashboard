@@ -15,8 +15,6 @@ spec:
   selector:
     matchLabels:
       app: {{ .name }}-warrior
-  strategy:
-    type: RollingUpdate
   template:
     metadata:
       labels:
