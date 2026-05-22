@@ -2,6 +2,8 @@ package warrior
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -41,7 +43,7 @@ type projectRefreshMsg struct {
 func Run(ctx context.Context, w config.Warrior, cfg *config.Config, h *hub.Hub) {
 	h.RegisterWarrior(w.Name, w.URL)
 
-	wsURL, err := buildWSURL(w.URL)
+	baseWSURL, err := buildWSBaseURL(w.URL)
 	if err != nil {
 		log.Printf("warrior %s: bad URL %q: %v", w.Name, w.URL, err)
 		return
@@ -52,6 +54,11 @@ func Run(ctx context.Context, w config.Warrior, cfg *config.Config, h *hub.Hub) 
 		if err := ctx.Err(); err != nil {
 			return
 		}
+		// SockJS framed WebSocket transport: /<server>/<session>/websocket.
+		// The raw /websocket endpoint silently stops delivering periodic
+		// broadcasts (bandwidth, timestamp) after the on_open dump — the
+		// framed transport is what the official sockjs JS client uses.
+		wsURL := fmt.Sprintf("%s/000/%s/websocket", baseWSURL, randomSession())
 		err := connectOnce(ctx, w.Name, wsURL, h)
 		if errors.Is(err, context.Canceled) {
 			return
@@ -158,9 +165,10 @@ func dispatch(name string, f frame, h *hub.Hub) {
 	}
 }
 
-// buildWSURL converts a warrior HTTP URL into the SockJS raw-WebSocket endpoint.
-// e.g. http://warrior.local:8001 -> ws://warrior.local:8001/websocket
-func buildWSURL(raw string) (string, error) {
+// buildWSBaseURL converts a warrior HTTP URL into a ws://host[:port][/prefix]
+// base, with any trailing slash stripped. Callers append the SockJS
+// per-session transport suffix (`/<server>/<session>/websocket`).
+func buildWSBaseURL(raw string) (string, error) {
 	u, err := url.Parse(raw)
 	if err != nil {
 		return "", err
@@ -175,10 +183,14 @@ func buildWSURL(raw string) (string, error) {
 	default:
 		return "", fmt.Errorf("unsupported scheme %q", u.Scheme)
 	}
-	if u.Path == "" || u.Path == "/" {
-		u.Path = "/websocket"
-	} else {
-		u.Path = strings.TrimRight(u.Path, "/") + "/websocket"
-	}
+	u.Path = strings.TrimRight(u.Path, "/")
 	return u.String(), nil
+}
+
+func randomSession() string {
+	var b [8]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		return fmt.Sprintf("t%d", time.Now().UnixNano())
+	}
+	return hex.EncodeToString(b[:])
 }
