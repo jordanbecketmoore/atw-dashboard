@@ -4,6 +4,12 @@ metadata:
   name: atw-dashboard
   labels:
     app.kubernetes.io/name: atw-dashboard
+  {{- if .Values.dashboard.service.annotations }}
+  annotations:
+    {{- range $key, $value := .Values.dashboard.service.annotations }}
+    {{ $key }}: {{ $value }}
+    {{- end }}
+  {{- end }}
 spec:
   type: ClusterIP
   selector:
