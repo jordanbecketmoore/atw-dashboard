@@ -92,11 +92,29 @@ func connectOnce(ctx context.Context, name, wsURL string, h *hub.Hub) error {
 		if err != nil {
 			return fmt.Errorf("read: %w", err)
 		}
-		var f frame
-		if err := json.Unmarshal(data, &f); err != nil {
+		if len(data) == 0 {
 			continue
 		}
-		dispatch(name, f, h)
+		// SockJS framing on the /websocket endpoint: 'o' open, 'h' heartbeat,
+		// 'c[code,reason]' close, 'a[...]' array of JSON-encoded message strings.
+		switch data[0] {
+		case 'o', 'h':
+			continue
+		case 'c':
+			return fmt.Errorf("server closed: %s", string(data[1:]))
+		case 'a':
+			var msgs []string
+			if err := json.Unmarshal(data[1:], &msgs); err != nil {
+				continue
+			}
+			for _, m := range msgs {
+				var f frame
+				if err := json.Unmarshal([]byte(m), &f); err != nil {
+					continue
+				}
+				dispatch(name, f, h)
+			}
+		}
 	}
 }
 
