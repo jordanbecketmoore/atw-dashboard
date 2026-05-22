@@ -129,13 +129,6 @@ function applyConnection(name, connected) {
   card.classList.toggle("connected", !!connected);
 }
 
-function applyProject(name, project) {
-  const card = document.getElementById(name);
-  if (!card) return;
-  const heading = card.querySelector(".heading h2:first-child");
-  if (heading) heading.textContent = project ? `${name} — ${project}` : name;
-}
-
 function applyBandwidth(name, msg) {
   const entry = ensureChart(name);
   if (!entry) return;
@@ -165,7 +158,6 @@ async function loadInitialState() {
   for (const w of warriors) {
     chartArea.appendChild(buildCard(w));
     ensureChart(w.name);
-    if (w.project) applyProject(w.name, w.project);
   }
   renderLeaderboard();
 }
@@ -187,10 +179,6 @@ function connectEvents() {
     const m = JSON.parse(e.data);
     applyConnection(m.name, m.connected);
     appendConsole(m.name, m.connected ? "Connected." : (m.message || "Disconnected."));
-  });
-  es.addEventListener("project", (e) => {
-    const m = JSON.parse(e.data);
-    applyProject(m.name, m.project);
   });
   es.addEventListener("console", (e) => {
     const m = JSON.parse(e.data);
