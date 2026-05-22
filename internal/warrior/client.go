@@ -95,6 +95,11 @@ func connectOnce(ctx context.Context, name, wsURL string, h *hub.Hub) error {
 		if len(data) == 0 {
 			continue
 		}
+		preview := data
+		if len(preview) > 200 {
+			preview = preview[:200]
+		}
+		log.Printf("warrior %s: recv %d bytes: %s", name, len(data), preview)
 		// SockJS framing on the /websocket endpoint: 'o' open, 'h' heartbeat,
 		// 'c[code,reason]' close, 'a[...]' array of JSON-encoded message strings.
 		switch data[0] {
@@ -105,15 +110,27 @@ func connectOnce(ctx context.Context, name, wsURL string, h *hub.Hub) error {
 		case 'a':
 			var msgs []string
 			if err := json.Unmarshal(data[1:], &msgs); err != nil {
+				log.Printf("warrior %s: unmarshal sockjs array failed: %v", name, err)
 				continue
 			}
 			for _, m := range msgs {
 				var f frame
 				if err := json.Unmarshal([]byte(m), &f); err != nil {
+					log.Printf("warrior %s: unmarshal frame failed: %v", name, err)
 					continue
 				}
 				dispatch(name, f, h)
 			}
+		case '{':
+			// raw JSON (non-SockJS) — fall back to direct unmarshal
+			var f frame
+			if err := json.Unmarshal(data, &f); err != nil {
+				log.Printf("warrior %s: unmarshal raw frame failed: %v", name, err)
+				continue
+			}
+			dispatch(name, f, h)
+		default:
+			log.Printf("warrior %s: unknown frame type %q", name, data[0])
 		}
 	}
 }
