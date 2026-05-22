@@ -23,10 +23,10 @@ type frame struct {
 }
 
 type bandwidthMsg struct {
-	Sending   uint64 `json:"sending"`
-	Receiving uint64 `json:"receiving"`
-	Sent      uint64 `json:"sent"`
-	Received  uint64 `json:"received"`
+	Sending   float64 `json:"sending"`
+	Receiving float64 `json:"receiving"`
+	Sent      uint64  `json:"sent"`
+	Received  uint64  `json:"received"`
 }
 
 type itemOutputMsg struct {
@@ -146,8 +146,10 @@ func dispatch(name string, f frame, h *hub.Hub) {
 	switch f.EventName {
 	case "bandwidth":
 		var b bandwidthMsg
-		if err := json.Unmarshal(f.Message, &b); err == nil {
-			h.UpdateBandwidth(name, b.Sending, b.Receiving, b.Sent, b.Received)
+		if err := json.Unmarshal(f.Message, &b); err != nil {
+			log.Printf("warrior %s: bandwidth unmarshal failed: %v", name, err)
+		} else {
+			h.UpdateBandwidth(name, uint64(b.Sending), uint64(b.Receiving), b.Sent, b.Received)
 		}
 	case "item.output":
 		var m itemOutputMsg
