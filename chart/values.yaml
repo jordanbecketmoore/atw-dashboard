@@ -1,7 +1,7 @@
 warriors: 
   nickname: "your-username"
   projects: 
-  - name: us-government
+  - name: usgovernment
     replicas: 1
 
 dashboard: 
