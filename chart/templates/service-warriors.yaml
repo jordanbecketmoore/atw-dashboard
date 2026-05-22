@@ -7,9 +7,9 @@ metadata:
   name: {{ $project.name }}-warrior-{{ $i }}
   labels:
     app.kubernetes.io/name: {{ $project.name }}-warrior-{{ $i }}
-  {{- if .Values.warriors.service.annotations }}
+  {{- if $.Values.warriors.service.annotations }}
   annotations:
-    {{- range $key, $value := .Values.warriors.service.annotations }}
+    {{- range $key, $value := $.Values.warriors.service.annotations }}
     {{ $key }}: {{ $value | quote }}
     {{- end }}
   {{- end }}
