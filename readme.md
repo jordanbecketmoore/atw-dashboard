@@ -11,8 +11,8 @@ publicly exposed. The frontend talks only to the backend over REST + SSE.
 ## Architecture
 
 ```
-                            ┌───────────────────────────────┐
-   public Ingress ───────► │  atw-dashboard (Go binary)     │
+                            ┌────────────────────────────────┐
+   Gateway HTTPRoute ────►  │  atw-dashboard (Go binary)     │
                             │                                │
                             │  GET /            embedded     │
                             │                   frontend     │
@@ -22,9 +22,9 @@ publicly exposed. The frontend talks only to the backend over REST + SSE.
                             └────────────────┬───────────────┘
                                              │ ws (cluster-internal)
                                              ▼
-                            ┌───────────────────────────────┐
-                            │  warriors (private Services)  │
-                            └───────────────────────────────┘
+                            ┌────────────────────────────────┐
+                            │  warriors (private Services)   │
+                            └────────────────────────────────┘
 ```
 
 - **Backend** (`cmd/server`, `internal/*`): one goroutine per warrior holds a
@@ -74,20 +74,49 @@ Open <http://localhost:8080>.
 
 ## Kubernetes deploy
 
-Manifests in `deploy/k8s/`:
+A Helm chart is provided in `chart/`. It deploys both the dashboard
+(Deployment + Service + ConfigMap) and the warriors themselves (one
+StatefulSet per project, fronted by headless Services on the cluster-internal
+network).
 
 ```sh
-# edit deploy/k8s/configmap.yaml with your nickname and warrior URLs
-kubectl apply -f deploy/k8s/
+helm install atw ./chart -f my-values.yaml
 ```
+
+Minimal `values.yaml`:
+
+```yaml
+warriors:
+  nickname: your-nickname
+  projects:
+    - name: usgovernment
+      replicas: 2
+
+dashboard:
+  image:
+    repository: jordanbmoore/atw-dashboard
+    tag: latest
+  httproute:
+    enabled: true
+    parentRefs:
+      - name: my-gateway
+        namespace: gateway
+    hostnames:
+      - atw.example.com
+```
+
+The chart generates the dashboard `config.yaml` from `warriors.projects`,
+naming each warrior `<project>-<index>` and pointing at
+`http://<project>-warrior-<index>:8001`.
 
 Notes:
 
-- The hub is in-memory and warrior connections are stateful — keep `replicas: 1`.
-- The Ingress example sets nginx annotations to disable proxy buffering and
-  raise the read timeout so SSE connections survive.
-- Warriors should be reachable only inside the cluster. Drop any public
-  Ingress / LoadBalancer that previously fronted them.
+- The hub is in-memory and warrior connections are stateful — the dashboard
+  Deployment is pinned to `replicas: 1` with a `Recreate` strategy.
+- External exposure uses the Gateway API (`HTTPRoute`), gated by
+  `dashboard.httproute.enabled`. Bring your own `Gateway`.
+- Warrior Services are cluster-internal only — they are not exposed via the
+  HTTPRoute.
 
 ## Theming
 
