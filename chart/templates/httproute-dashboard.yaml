@@ -14,6 +14,7 @@ spec:
   {{- range .Values.dashboard.httproute.parentRefs }}
   {{ . | toYaml | nindent 4 }}
   {{- end }}
+  rules:
   - backendRefs:
     - group: ""
       kind: Service
