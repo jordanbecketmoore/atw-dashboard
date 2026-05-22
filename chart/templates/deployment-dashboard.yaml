@@ -24,7 +24,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: server
-          image: atw-dashboard:latest
+          image: {{ .Values.dashboard.image.repository }}:{{ .Values.dashboard.image.tag }}
           imagePullPolicy: IfNotPresent
           args: ["-config", "/etc/atw-dashboard/config.yaml"]
           ports:

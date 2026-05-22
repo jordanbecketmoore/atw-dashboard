@@ -4,5 +4,8 @@ warriors:
   - name: us-government
     replicas: 1
 
-dashbaord: {}
+dashboard: 
+  image:
+    repository: "jordanbmoore/atw-dashboard"
+    tag: "latest"
     
