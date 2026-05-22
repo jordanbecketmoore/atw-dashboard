@@ -14,9 +14,9 @@ import (
 const baseURL = "https://legacy-api.arpa.li"
 
 type rawStats struct {
-	Downloaders     []string          `json:"downloaders"`
-	DownloaderBytes map[string]uint64 `json:"downloader_bytes"`
-	DownloaderCount map[string]uint64 `json:"downloader_count"`
+	Downloaders     []string           `json:"downloaders"`
+	DownloaderBytes map[string]float64 `json:"downloader_bytes"`
+	DownloaderCount map[string]uint64  `json:"downloader_count"`
 }
 
 type Poller struct {
@@ -89,7 +89,7 @@ func (p *Poller) fetchProject(ctx context.Context, project string) (*hub.Project
 	for i, name := range raw.Downloaders {
 		if name == p.nickname {
 			stats.Position = i + 1
-			stats.Bytes = raw.DownloaderBytes[name]
+			stats.Bytes = uint64(raw.DownloaderBytes[name])
 			stats.Items = raw.DownloaderCount[name]
 			break
 		}
