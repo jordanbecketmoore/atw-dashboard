@@ -12,10 +12,7 @@ spec:
   {{- end }}
   parentRefs:
   {{- range .Values.dashboard.httproute.parentRefs }}
-  - group: {{ .group }}
-    kind: {{ .kind }}
-    name: {{ .name }}
-    namespace: {{ .namespace }}
+  {{ . | toYaml | nindent 4 }}
   {{- end }}
   - backendRefs:
     - group: ""
