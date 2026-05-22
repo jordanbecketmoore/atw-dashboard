@@ -38,6 +38,26 @@ publicly exposed. The frontend talks only to the backend over REST + SSE.
   `EventSource('/events')` for live updates. No third-party JS dependencies
   (the third-party `smoothie.js` chart library is vendored locally).
 
+### Browser ↔ warrior data flow
+
+The browser-to-warrior path is not a forwarded WebSocket. Two different
+protocols are joined by an in-process pub/sub hub:
+
+- **Browser ↔ server** is one-way HTTP Server-Sent Events. The browser opens
+  an `EventSource` to `GET /events`; the server holds the response open and
+  streams JSON events.
+- **Server ↔ warrior** is an outbound, server-initiated WebSocket per warrior,
+  SockJS-framed (`ws://<warrior>/000/{session}/websocket`), with reconnect and
+  exponential backoff. A read loop unwraps SockJS frames and dispatches
+  payloads to the hub.
+- **Hub** fans each event out to every subscribed SSE client. There is no
+  per-connection routing — every browser receives every warrior's events, and
+  each payload carries a `name` field the frontend uses to render the right
+  card.
+- **Direction is strict**: warriors push, browsers receive. There is no
+  bidirectional pump, so the browser cannot send anything back to a warrior
+  through this channel.
+
 ## Configuration
 
 The backend reads YAML from `-config` (default `/etc/atw-dashboard/config.yaml`).
