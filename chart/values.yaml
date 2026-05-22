@@ -1,14 +1,36 @@
-warriors: 
+warriors:
+  # Operator nickname reported to the legacy-api.arpa.li leaderboard and
+  # passed to each warrior as DOWNLOADER.
   nickname: "your-username"
-  projects: 
-  - name: usgovernment
-    replicas: 1
 
-dashboard: 
+  # Each entry creates a StatefulSet running the given ArchiveTeam warrior
+  # project, plus a headless-style Service per replica that the dashboard
+  # connects to.
+  projects:
+    - name: usgovernment
+      replicas: 1
+
+  service:
+    # Extra annotations applied to every per-warrior Service.
+    annotations: {}
+
+dashboard:
   image:
     repository: "jordanbmoore/atw-dashboard"
     tag: "latest"
-  service: 
+
+  service:
+    # Extra annotations applied to the dashboard Service.
     annotations: {}
+
   httproute:
+    # Set true to expose the dashboard via a Gateway API HTTPRoute.
+    # Requires a Gateway controller (e.g. Cilium, Envoy Gateway) in the cluster.
     enabled: false
+    # Hostnames the route matches. Leave empty to match any host on the parent.
+    hostnames: []
+    #   - dashboard.example.com
+    # Gateways this route attaches to.
+    parentRefs: []
+    #   - name: my-gateway
+    #     namespace: gateway-system
