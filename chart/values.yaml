@@ -8,4 +8,5 @@ dashboard:
   image:
     repository: "jordanbmoore/atw-dashboard"
     tag: "latest"
-    
+  httproute:
+    enabled: false
