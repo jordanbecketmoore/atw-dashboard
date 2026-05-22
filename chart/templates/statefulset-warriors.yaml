@@ -1,0 +1,43 @@
+{{- range .Values.warriors.projects }}
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .name }}-warrior
+  labels:
+    app: {{ .name }}-warrior
+  annotations:
+    keel.sh/policy: force
+    keel.sh/trigger: poll
+    keel.sh/pollSchedule: "@every 5m"
+spec:
+  replicas: {{ .replicas }}
+  selector:
+    matchLabels:
+      app: {{ .name }}-warrior
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: {{ .name }}-warrior
+    spec:
+      containers:
+        - name: warrior
+          image: atdr.meo.ws/archiveteam/warrior-dockerfile
+          ports:
+            - name: http
+              containerPort: 8001
+              protocol: TCP
+          env:
+            - name: DOWNLOADER
+              value: {{ $.Values.warriors.nickname }}
+            - name: CONCURRENT_ITEMS
+              value: "6"
+            - name: SELECTED_PROJECT
+              value: {{ .name }}
+            - name: WARRIOR_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+{{- end }}

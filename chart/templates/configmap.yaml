@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: atw-dashboard
+  labels:
+    app.kubernetes.io/name: atw-dashboard
+data:
+  config.yaml: |
+    listen_addr: ":8080"
+    nickname: {{ .Values.nickname }}
+    leaderboard_interval: 5m
+    warriors:
+{{- range $project := .Values.warriors.projects }}
+{{- range $i, $e := until (int $project.replicas) }}
+      - name: {{ $project.name }}-{{ $i }}
+        url: http://{{ $project.name }}-warrior-{{ $i }}:8001
+{{- end }}
+{{- end }}

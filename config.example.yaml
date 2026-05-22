@@ -14,7 +14,7 @@ reconnect_max: 60s
 # Warriors the backend connects to. URLs are reachable from inside the cluster
 # only — they no longer need to be publicly exposed.
 warriors:
-  - name: warrior-1
-    url: http://warrior-1.warriors.svc.cluster.local:8001
-  - name: warrior-2
-    url: http://warrior-2.warriors.svc.cluster.local:8001
+  - name: us-government-0
+    url: http://us-government-warrior-0:8001
+  - name: us-government-1
+    url: http://us-government-warrior-1:8001

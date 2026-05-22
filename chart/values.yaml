@@ -1,0 +1,8 @@
+warriors: 
+  nickname: "your-username"
+  projects: 
+  - name: us-government
+    replicas: 1
+
+dashbaord: {}
+    
