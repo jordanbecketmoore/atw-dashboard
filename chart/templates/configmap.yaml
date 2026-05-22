@@ -7,7 +7,7 @@ metadata:
 data:
   config.yaml: |
     listen_addr: ":8080"
-    nickname: {{ .Values.nickname }}
+    nickname: {{ .Values.warriors.nickname }}
     leaderboard_interval: 5m
     warriors:
 {{- range $project := .Values.warriors.projects }}
