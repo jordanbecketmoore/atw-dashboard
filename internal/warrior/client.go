@@ -96,8 +96,8 @@ func connectOnce(ctx context.Context, name, wsURL string, h *hub.Hub) error {
 			continue
 		}
 		preview := data
-		if len(preview) > 200 {
-			preview = preview[:200]
+		if len(preview) > 16384 {
+			preview = preview[:16384]
 		}
 		log.Printf("warrior %s: recv %d bytes: %s", name, len(data), preview)
 		// SockJS framing on the /websocket endpoint: 'o' open, 'h' heartbeat,
