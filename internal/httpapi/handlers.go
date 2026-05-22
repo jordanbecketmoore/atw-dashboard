@@ -55,8 +55,10 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	flusher.Flush()
 
-	_, ch, unsub := s.hub.Subscribe()
+	id, ch, unsub := s.hub.Subscribe()
 	defer unsub()
+	log.Printf("events: subscriber %d connected from %s", id, r.RemoteAddr)
+	defer log.Printf("events: subscriber %d disconnected", id)
 
 	ticker := time.NewTicker(heartbeatInterval)
 	defer ticker.Stop()
@@ -75,19 +77,21 @@ func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
 			if !open {
 				return
 			}
-			if err := writeEvent(w, ev); err != nil {
+			payload, err := json.Marshal(ev.Payload)
+			if err != nil {
+				log.Printf("events: subscriber %d marshal %s failed: %v", id, ev.Type, err)
+				continue
+			}
+			if _, err := fmt.Fprintf(w, "event: %s\ndata: %s\n\n", ev.Type, payload); err != nil {
+				log.Printf("events: subscriber %d write %s failed: %v", id, ev.Type, err)
 				return
 			}
+			preview := payload
+			if len(preview) > 300 {
+				preview = preview[:300]
+			}
+			log.Printf("events: subscriber %d -> %s (%d bytes): %s", id, ev.Type, len(payload), preview)
 			flusher.Flush()
 		}
 	}
-}
-
-func writeEvent(w http.ResponseWriter, ev hub.Event) error {
-	data, err := json.Marshal(ev.Payload)
-	if err != nil {
-		return err
-	}
-	_, err = fmt.Fprintf(w, "event: %s\ndata: %s\n\n", ev.Type, data)
-	return err
 }
