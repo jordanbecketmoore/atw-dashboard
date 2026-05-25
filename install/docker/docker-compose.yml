@@ -6,26 +6,6 @@ services:
     volumes:
     - ./config.yaml:/etc/atw-dashboard/config.yaml:ro
     restart: unless-stopped
-  warrior-0:
-    labels:
-        - com.centurylinklabs.watchtower.enable=true
-    restart: unless-stopped
-    image: atdr.meo.ws/archiveteam/warrior-dockerfile
-    environment:
-      - SELECTED_PROJECT=usgovernment
-      - WARRIOR_ID=
-      - DOWNLOADER=
-      - CONCURRENT_ITEMS=
-  warrior-1:
-    labels:
-        - com.centurylinklabs.watchtower.enable=true
-    restart: unless-stopped
-    image: atdr.meo.ws/archiveteam/warrior-dockerfile
-    environment:
-      - SELECTED_PROJECT=usgovernment
-      - WARRIOR_ID=
-      - DOWNLOADER=
-      - CONCURRENT_ITEMS=
   watchtower:
     container_name: watchtower
     restart: unless-stopped
@@ -33,3 +13,16 @@ services:
     - /var/run/docker.sock:/var/run/docker.sock
     image: nickfedor/watchtower
     command: --label-enable --cleanup --include-restarting --interval 3600
+  warrior:
+    labels:
+        - com.centurylinklabs.watchtower.enable=true
+    restart: unless-stopped
+    image: atdr.meo.ws/archiveteam/warrior-dockerfile
+    environment:
+      - SELECTED_PROJECT=usgovernment
+      - WARRIOR_ID=
+      - DOWNLOADER=
+      - CONCURRENT_ITEMS=
+    deploy:
+      mode: replicated
+      replicas: 2
