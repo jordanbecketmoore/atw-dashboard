@@ -2,7 +2,6 @@ name: Helm Chart Release
 
 on:
   push:
-    branches: [ "main" ]
     tags:
       - "chart/v*.*.*"
 
