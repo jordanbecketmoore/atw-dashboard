@@ -1,0 +1,43 @@
+name: Helm Chart Release
+
+on:
+  push:
+    branches: [ "main" ]
+    tags:
+      - "chart/v*.*.*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Resolve release name
+        id: version
+        uses: ./.github/actions/resolve-version
+
+      - name: Package chart
+        run: helm package chart/ --destination .helm-output/
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push chart to GHCR
+        run: helm push .helm-output/*.tgz oci://ghcr.io/${{ github.repository_owner }}
+
+      - name: Upload chart to release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ steps.version.outputs.version }}
+          files: .helm-output/*.tgz

@@ -1,0 +1,18 @@
+name: Resolve version
+description: Strips tag prefix (app/, chart/) from the git ref name
+
+outputs:
+  version:
+    description: Version with prefix stripped
+    value: ${{ steps.strip.outputs.version }}
+
+runs:
+  using: composite
+  steps:
+    - id: strip
+      shell: bash
+      run: |
+        ref="${{ github.ref_name }}"
+        ref="${ref#app/}"
+        ref="${ref#chart/}"
+        echo "version=$ref" >> $GITHUB_OUTPUT

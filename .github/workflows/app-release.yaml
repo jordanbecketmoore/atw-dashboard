@@ -1,0 +1,54 @@
+name: App Release
+
+on:
+  push:
+    branches: [ "main" ]
+    tags:
+      - "app/v*.*.*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+          - goos: linux
+            goarch: arm64
+          - goos: darwin
+            goarch: amd64
+          - goos: darwin
+            goarch: arm64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Resolve version
+        id: version
+        uses: ./.github/actions/resolve-version
+
+      - name: Build
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          mkdir -p dist
+          go build -ldflags="-s -w -X main.version=${{ steps.version.outputs.version }}" \
+            -o dist/atw-dashboard-${{ matrix.goos }}-${{ matrix.goarch }} \
+            ./cmd/server
+
+      - name: Upload binary to release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ steps.version.outputs.version }}
+          body: |
+            Docker image: `${{ github.repository_owner }}/atw-dashboard:${{ steps.version.outputs.version }}`
+          files: dist/atw-dashboard-${{ matrix.goos }}-${{ matrix.goarch }}

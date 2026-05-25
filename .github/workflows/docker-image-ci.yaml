@@ -2,9 +2,9 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "*" ]
+    branches: [ "main" ]
     tags:
-      - "v*.*.*"
+      - "app/v*.*.*"
 
 jobs:
 
@@ -14,6 +14,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: Resolve image tag
+      id: version
+      uses: ./.github/actions/resolve-version
     - name: Build, Tag & Publish Image to DockerHub
       uses: dinushchathurya/build-tag-push-action@v1.2.1
       with:
@@ -23,4 +26,4 @@ jobs:
         file: ./Dockerfile
         repoOwner: ${{ secrets.DOCKER_USERNAME }}
         repository:  atw-dashboard
-        tag: ${{ github.ref_name == 'main' && 'latest' || github.ref_name }}
+        tag: ${{ steps.version.outputs.version }}
