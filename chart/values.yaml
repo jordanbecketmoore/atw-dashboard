@@ -9,7 +9,8 @@ warriors:
   projects:
     - name: usgovernment
       replicas: 1
-      concurrent_items: 6
+      # Optional: set CONCURRENT_ITEMS for this project
+      # concurrent_items: 6
 
   service:
     # Extra annotations applied to every per-warrior Service.
