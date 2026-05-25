@@ -23,7 +23,7 @@ jobs:
         uses: ./.github/actions/resolve-version
 
       - name: Package chart
-        run: helm package chart/ --destination .helm-output/
+        run: helm package install/helmchart/ --destination .helm-output/
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
