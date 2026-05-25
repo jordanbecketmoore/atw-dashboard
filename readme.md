@@ -10,56 +10,6 @@ The backend runs in the same Kubernetes cluster as the warriors and connects to
 them over the cluster's internal network — so the warriors no longer need to be
 publicly exposed. The frontend talks only to the backend over REST + SSE.
 
-## Architecture
-
-```
-                            ┌────────────────────────────────┐
-   Gateway HTTPRoute ────►  │  atw-dashboard (Go binary)     │
-                            │                                │
-                            │  GET /            embedded     │
-                            │                   frontend     │
-                            │  GET /api/state   snapshot     │
-                            │  GET /events      SSE stream   │
-                            │  GET /healthz                  │
-                            └────────────────┬───────────────┘
-                                             │ ws (cluster-internal)
-                                             ▼
-                            ┌────────────────────────────────┐
-                            │  warriors (private Services)   │
-                            └────────────────────────────────┘
-```
-
-- **Backend** (`cmd/server`, `internal/*`): one goroutine per warrior holds a
-  SockJS-over-WebSocket connection to `ws://<warrior>/websocket`, parses
-  `bandwidth`, `item.output`, `project.refresh` events into an in-memory state
-  hub, and fans them out to browser clients via Server-Sent Events. A
-  leaderboard poller hits `legacy-api.arpa.li` every 5 min for each active
-  project and computes the operator's rank server-side.
-- **Frontend** (`web/`): static HTML/JS embedded into the binary via
-  `//go:embed`. On load, fetches `/api/state` for an initial render, then opens
-  `EventSource('/events')` for live updates. No third-party JS dependencies
-  (the third-party `smoothie.js` chart library is vendored locally).
-
-### Browser ↔ warrior data flow
-
-The browser-to-warrior path is not a forwarded WebSocket. Two different
-protocols are joined by an in-process pub/sub hub:
-
-- **Browser ↔ server** is one-way HTTP Server-Sent Events. The browser opens
-  an `EventSource` to `GET /events`; the server holds the response open and
-  streams JSON events.
-- **Server ↔ warrior** is an outbound, server-initiated WebSocket per warrior,
-  SockJS-framed (`ws://<warrior>/000/{session}/websocket`), with reconnect and
-  exponential backoff. A read loop unwraps SockJS frames and dispatches
-  payloads to the hub.
-- **Hub** fans each event out to every subscribed SSE client. There is no
-  per-connection routing — every browser receives every warrior's events, and
-  each payload carries a `name` field the frontend uses to render the right
-  card.
-- **Direction is strict**: warriors push, browsers receive. There is no
-  bidirectional pump, so the browser cannot send anything back to a warrior
-  through this channel.
-
 ## Configuration
 
 The backend reads YAML from `-config` (default `/etc/atw-dashboard/config.yaml`).
@@ -76,27 +26,19 @@ warriors:
     url: http://warrior-2.warriors.svc.cluster.local:8001
 ```
 
-## Local development
+## Docker Installation
 
-```sh
-make tidy
-make test
-make build           # produces bin/atw-dashboard
-make run-local CONFIG=$PWD/config.yaml
+A Docker compose stack is provided in `install/docker/`. 
+
+```bash 
+git clone git@github.com:jordanbecketmoore/atw-dashboard.git
+cd atw-dashboard/install/docker
+docker compose up -d
 ```
 
-Or with Docker:
+## Kubernetes Installation
 
-```sh
-make docker
-make run CONFIG=$PWD/config.yaml
-```
-
-Open <http://localhost:8080>.
-
-## Kubernetes deploy
-
-A Helm chart is provided in `chart/` and published to GHCR as an OCI artifact.
+A Helm chart is provided in `install/helmchart/` and published to GHCR as an OCI artifact.
 It deploys both the dashboard (Deployment + Service + ConfigMap) and the warriors
 themselves (one StatefulSet per project, fronted by headless Services on the
 cluster-internal network).
@@ -149,6 +91,74 @@ Notes:
   `dashboard.httproute.enabled`. Bring your own `Gateway`.
 - Warrior Services are cluster-internal only — they are not exposed via the
   HTTPRoute.
+## Architecture
+
+```
+                            ┌────────────────────────────────┐
+   Gateway HTTPRoute ────►  │  atw-dashboard (Go binary)     │
+                            │                                │
+                            │  GET /            embedded     │
+                            │                   frontend     │
+                            │  GET /api/state   snapshot     │
+                            │  GET /events      SSE stream   │
+                            │  GET /healthz                  │
+                            └────────────────┬───────────────┘
+                                             │ ws (cluster-internal)
+                                             ▼
+                            ┌────────────────────────────────┐
+                            │  warriors (private Services)   │
+                            └────────────────────────────────┘
+```
+
+- **Backend** (`cmd/server`, `internal/*`): one goroutine per warrior holds a
+  SockJS-over-WebSocket connection to `ws://<warrior>/websocket`, parses
+  `bandwidth`, `item.output`, `project.refresh` events into an in-memory state
+  hub, and fans them out to browser clients via Server-Sent Events. A
+  leaderboard poller hits `legacy-api.arpa.li` every 5 min for each active
+  project and computes the operator's rank server-side.
+- **Frontend** (`web/`): static HTML/JS embedded into the binary via
+  `//go:embed`. On load, fetches `/api/state` for an initial render, then opens
+  `EventSource('/events')` for live updates. No third-party JS dependencies
+  (the third-party `smoothie.js` chart library is vendored locally).
+
+### Browser ↔ warrior data flow
+
+The browser-to-warrior path is not a forwarded WebSocket. Two different
+protocols are joined by an in-process pub/sub hub:
+
+- **Browser ↔ server** is one-way HTTP Server-Sent Events. The browser opens
+  an `EventSource` to `GET /events`; the server holds the response open and
+  streams JSON events.
+- **Server ↔ warrior** is an outbound, server-initiated WebSocket per warrior,
+  SockJS-framed (`ws://<warrior>/000/{session}/websocket`), with reconnect and
+  exponential backoff. A read loop unwraps SockJS frames and dispatches
+  payloads to the hub.
+- **Hub** fans each event out to every subscribed SSE client. There is no
+  per-connection routing — every browser receives every warrior's events, and
+  each payload carries a `name` field the frontend uses to render the right
+  card.
+- **Direction is strict**: warriors push, browsers receive. There is no
+  bidirectional pump, so the browser cannot send anything back to a warrior
+  through this channel.
+
+## Local development
+
+```sh
+make tidy
+make test
+make build           # produces bin/atw-dashboard
+make run-local CONFIG=$PWD/config.yaml
+```
+
+Or with Docker:
+
+```sh
+make docker
+make run CONFIG=$PWD/config.yaml
+```
+
+Open <http://localhost:8080>.
+
 
 ## Theming
 
