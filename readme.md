@@ -1,4 +1,4 @@
-# Dashboard for Archive Team Warrior
+# Archive Team Warrior Dashboard
 
 > **Note:** This repository contains AI-generated code.
 
