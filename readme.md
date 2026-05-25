@@ -5,10 +5,9 @@
 ![Screenshot of a dashboard with multiple line graphs for bandwidth](screenshots/screenshot.png)
 
 A live dashboard for a fleet of Archive Team Warriors. Originally a pure
-client-side SPA, this version splits into a Go backend and a static frontend.
-The backend runs in the same Kubernetes cluster as the warriors and connects to
-them over the cluster's internal network — so the warriors no longer need to be
-publicly exposed. The frontend talks only to the backend over REST + SSE.
+client-side SPA, this version splits into a Go backend and a static frontend. 
+Deploy conveniently alongside a your warriors on Docker using the docker
+compose stack or on Kubernetes with the Helm chart. 
 
 ## Configuration
 
