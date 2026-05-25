@@ -31,8 +31,10 @@ spec:
           env:
             - name: DOWNLOADER
               value: {{ $.Values.warriors.nickname }}
+              {{- if .concurrent_items }}
             - name: CONCURRENT_ITEMS
-              value: "6"
+              value: "{{ .concurrent_items }}"
+              {{- end }}
             - name: SELECTED_PROJECT
               value: {{ .name }}
             - name: WARRIOR_ID

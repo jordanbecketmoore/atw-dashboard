@@ -5,10 +5,11 @@ warriors:
 
   # Each entry creates a StatefulSet running the given ArchiveTeam warrior
   # project, plus a headless-style Service per replica that the dashboard
-  # connects to.
+  # connects to. 
   projects:
     - name: usgovernment
       replicas: 1
+      concurrent_items: 6
 
   service:
     # Extra annotations applied to every per-warrior Service.
