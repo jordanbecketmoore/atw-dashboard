@@ -47,7 +47,7 @@ jobs:
       - name: Upload binary to release
         uses: softprops/action-gh-release@v2
         with:
-          name: ${{ steps.version.outputs.version }}
+          name: App ${{ steps.version.outputs.version }}
           body: |
             Docker image: `${{ github.repository_owner }}/atw-dashboard:${{ steps.version.outputs.version }}`
           files: dist/atw-dashboard-${{ matrix.goos }}-${{ matrix.goarch }}
