@@ -17,7 +17,7 @@ warriors:
 dashboard:
   image:
     repository: "jordanbmoore/atw-dashboard"
-    tag: "latest"
+    tag: "v0.1.0"
 
   service:
     # Extra annotations applied to the dashboard Service.
