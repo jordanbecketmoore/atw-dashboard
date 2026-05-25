@@ -1,5 +1,7 @@
 # Dashboard for Archive Team Warrior
 
+> **Note:** This repository contains AI-generated code.
+
 ![Screenshot of a dashboard with multiple line graphs for bandwidth](screenshots/screenshot.png)
 
 A live dashboard for a fleet of Archive Team Warriors. Originally a pure
@@ -94,10 +96,20 @@ Open <http://localhost:8080>.
 
 ## Kubernetes deploy
 
-A Helm chart is provided in `chart/`. It deploys both the dashboard
-(Deployment + Service + ConfigMap) and the warriors themselves (one
-StatefulSet per project, fronted by headless Services on the cluster-internal
-network).
+A Helm chart is provided in `chart/` and published to GHCR as an OCI artifact.
+It deploys both the dashboard (Deployment + Service + ConfigMap) and the warriors
+themselves (one StatefulSet per project, fronted by headless Services on the
+cluster-internal network).
+
+**Install from OCI (recommended):**
+
+```sh
+helm install atw oci://ghcr.io/jordanbmoore/atw-dashboard --version <version> -f my-values.yaml
+```
+
+To see available versions, check the [releases page](https://github.com/jordanbmoore/atw-dashboard/releases).
+
+**Install from local chart:**
 
 ```sh
 helm install atw ./chart -f my-values.yaml
