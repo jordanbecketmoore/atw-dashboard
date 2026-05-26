@@ -83,29 +83,30 @@ func (p *Poller) fetchProject(ctx context.Context, project string) (*hub.Project
 		return nil, fmt.Errorf("decode: %w", err)
 	}
 
-	stats := &hub.ProjectStats{
-		Project: project,
-		Total:   len(raw.Downloaders),
-	}
-
+	// Build a sorted ranking by bytes descending to determine position.
 	type entry struct {
 		name  string
 		bytes float64
 	}
-	entries := make([]entry, 0, len(raw.DownloaderBytes))
+	ranked := make([]entry, 0, len(raw.DownloaderBytes))
 	for name, bytes := range raw.DownloaderBytes {
-		entries = append(entries, entry{name, bytes})
+		ranked = append(ranked, entry{name, bytes})
 	}
-	sort.Slice(entries, func(i, j int) bool {
-		return entries[i].bytes > entries[j].bytes
+	sort.Slice(ranked, func(i, j int) bool {
+		return ranked[i].bytes > ranked[j].bytes
 	})
-	for i, e := range entries {
+
+	stats := &hub.ProjectStats{
+		Project: project,
+		Total:   len(raw.Downloaders),
+	}
+	for i, e := range ranked {
 		if e.name == p.nickname {
 			stats.Position = i + 1
 			stats.Bytes = uint64(e.bytes)
-			stats.Items = raw.DownloaderCount[e.name]
 			break
 		}
 	}
+
 	return stats, nil
 }
