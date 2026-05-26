@@ -4,6 +4,10 @@ metadata:
   name: atw-dashboard
   labels:
     app.kubernetes.io/name: atw-dashboard
+  annotations:
+    {{- range .Values.dashboard.annotations }}
+    {{ .key }}: {{ .value | quote }}
+    {{- end }}
 spec:
   # Hub state is in-memory and warrior connections are stateful — do not scale > 1.
   replicas: 1
@@ -17,7 +21,7 @@ spec:
       labels:
         app.kubernetes.io/name: atw-dashboard
     spec:
-      {{- if .Values.dashboard.waitForWarriors }}
+      {{- if .Values.dashboard.deployment.waitForWarriors }}
       serviceAccountName: atw-dashboard
       {{- end }}
       securityContext:
@@ -25,10 +29,10 @@ spec:
         runAsUser: 65532
         seccompProfile:
           type: RuntimeDefault
-      {{- if .Values.dashboard.waitForWarriors }}
+      {{- if .Values.dashboard.deployment.waitForWarriors }}
       initContainers:
         - name: wait-for-warriors
-          image: {{ .Values.dashboard.waitImage.repository }}:{{ .Values.dashboard.waitImage.tag }}
+          image: {{ .Values.dashboard.deployment.waitImage.repository }}:{{ .Values.dashboard.deployment.waitImage.tag }}
           env:
             - name: NAMESPACE
               valueFrom:
@@ -51,7 +55,7 @@ spec:
       {{- end }}
       containers:
         - name: server
-          image: {{ .Values.dashboard.image.repository }}:{{ .Values.dashboard.image.tag }}
+          image: {{ .Values.dashboard.deployment.image.repository }}:{{ .Values.dashboard.deployment.image.tag }}
           imagePullPolicy: Always
           ports:
             - name: http
