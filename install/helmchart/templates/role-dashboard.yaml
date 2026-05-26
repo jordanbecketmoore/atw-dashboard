@@ -1,0 +1,12 @@
+{{- if .Values.dashboard.waitForWarriors }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: atw-dashboard-pod-reader
+  labels:
+    app.kubernetes.io/name: atw-dashboard
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+{{- end }}

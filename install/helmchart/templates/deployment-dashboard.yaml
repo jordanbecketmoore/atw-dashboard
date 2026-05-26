@@ -17,11 +17,38 @@ spec:
       labels:
         app.kubernetes.io/name: atw-dashboard
     spec:
+      {{- if .Values.dashboard.waitForWarriors }}
+      serviceAccountName: atw-dashboard
+      {{- end }}
       securityContext:
         runAsNonRoot: true
         runAsUser: 65532
         seccompProfile:
           type: RuntimeDefault
+      {{- if .Values.dashboard.waitForWarriors }}
+      initContainers:
+        - name: wait-for-warriors
+          image: {{ .Values.dashboard.waitImage.repository }}:{{ .Values.dashboard.waitImage.tag }}
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: WARRIOR_PROJECTS
+              value: "{{ range .Values.warriors.projects }}{{ .name }} {{ end }}"
+          command:
+            - /bin/sh
+            - -c
+            - |
+              for project in $WARRIOR_PROJECTS; do
+                echo "Waiting for ${project}-warrior pods to exist..."
+                until kubectl get pods -l app=${project}-warrior -n "$NAMESPACE" --no-headers 2>/dev/null | grep -q .; do
+                  sleep 5
+                done
+                echo "Waiting for ${project}-warrior pods to be ready..."
+                kubectl wait pods -l app=${project}-warrior -n "$NAMESPACE" --for=condition=Ready --timeout=300s
+              done
+      {{- end }}
       containers:
         - name: server
           image: {{ .Values.dashboard.image.repository }}:{{ .Values.dashboard.image.tag }}

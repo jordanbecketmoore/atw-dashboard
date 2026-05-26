@@ -21,6 +21,14 @@ dashboard:
     repository: "jordanbmoore/atw-dashboard"
     tag: "v0.1.0"
 
+  # When true, an init container blocks the dashboard pod until every warrior
+  # StatefulSet's pods are Ready. Requires RBAC resources (ServiceAccount,
+  # Role, RoleBinding) which are also gated on this flag.
+  waitForWarriors: true
+  waitImage:
+    repository: bitnami/kubectl
+    tag: latest
+
   service:
     # Extra annotations applied to the dashboard Service.
     annotations: {}
