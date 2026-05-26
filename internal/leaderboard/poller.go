@@ -104,6 +104,7 @@ func (p *Poller) fetchProject(ctx context.Context, project string) (*hub.Project
 		if e.name == p.nickname {
 			stats.Position = i + 1
 			stats.Bytes = uint64(e.bytes)
+			stats.Items = raw.DownloaderCount[e.name]
 			break
 		}
 	}
