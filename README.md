@@ -22,7 +22,7 @@ docker compose up -d
 
 ## Kubernetes Installation
 
-A Helm chart is provided in `install/helmchart/` and published to GHCR as an OCI artifact.
+A Helm chart is provided in `install/helm/` and published to GHCR as an OCI artifact.
 It deploys both the dashboard (Deployment + Service + ConfigMap) and the warriors
 themselves (one StatefulSet per project, fronted by headless Services on the
 cluster-internal network).
