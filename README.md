@@ -19,7 +19,7 @@ cd atw-dashboard/install/docker
 docker compose up -d
 ```
 
-THen view the dashboard at [http://localhost:8080](http://localhost:8080).
+Then view the dashboard at [http://localhost:8080](http://localhost:8080).
 
 ## Kubernetes Installation
 
