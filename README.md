@@ -4,11 +4,10 @@
 
 ![Screenshot of a dashboard with multiple line graphs for bandwidth](screenshots/screenshot.png)
 
-A live dashboard for a fleet of Archive Team Warriors. Originally a pure
-client-side SPA, this version splits into a Go backend and a static frontend. 
-Deploy conveniently alongside a your warriors on Docker using the docker
-compose stack or on Kubernetes with the Helm chart. 
+atw-dashboard is an all-in-one solution for running and monitoring ArchiveTeam Warriors at scale. Deploy a fleet of warriors and a dashboard on Docker or Kubernetes in minutes. 
 
+## Architecture
+A Go backend server connects to all deployed warriors and streams their logs and network activity graphs to unified frontend dashboard. 
 
 ## Docker Installation
 
@@ -93,56 +92,6 @@ warriors:
     url: http://warrior-2.warriors.svc.cluster.local:8001
 ```
 
-## Architecture
-
-```
-                            ┌────────────────────────────────┐
-   Gateway HTTPRoute ────►  │  atw-dashboard (Go binary)     │
-                            │                                │
-                            │  GET /            embedded     │
-                            │                   frontend     │
-                            │  GET /api/state   snapshot     │
-                            │  GET /events      SSE stream   │
-                            │  GET /healthz                  │
-                            └────────────────┬───────────────┘
-                                             │ ws (cluster-internal)
-                                             ▼
-                            ┌────────────────────────────────┐
-                            │  warriors (private Services)   │
-                            └────────────────────────────────┘
-```
-
-- **Backend** (`cmd/server`, `internal/*`): one goroutine per warrior holds a
-  SockJS-over-WebSocket connection to `ws://<warrior>/websocket`, parses
-  `bandwidth`, `item.output`, `project.refresh` events into an in-memory state
-  hub, and fans them out to browser clients via Server-Sent Events. A
-  leaderboard poller hits `legacy-api.arpa.li` every 5 min for each active
-  project and computes the operator's rank server-side.
-- **Frontend** (`web/`): static HTML/JS embedded into the binary via
-  `//go:embed`. On load, fetches `/api/state` for an initial render, then opens
-  `EventSource('/events')` for live updates. No third-party JS dependencies
-  (the third-party `smoothie.js` chart library is vendored locally).
-
-### Browser ↔ warrior data flow
-
-The browser-to-warrior path is not a forwarded WebSocket. Two different
-protocols are joined by an in-process pub/sub hub:
-
-- **Browser ↔ server** is one-way HTTP Server-Sent Events. The browser opens
-  an `EventSource` to `GET /events`; the server holds the response open and
-  streams JSON events.
-- **Server ↔ warrior** is an outbound, server-initiated WebSocket per warrior,
-  SockJS-framed (`ws://<warrior>/000/{session}/websocket`), with reconnect and
-  exponential backoff. A read loop unwraps SockJS frames and dispatches
-  payloads to the hub.
-- **Hub** fans each event out to every subscribed SSE client. There is no
-  per-connection routing — every browser receives every warrior's events, and
-  each payload carries a `name` field the frontend uses to render the right
-  card.
-- **Direction is strict**: warriors push, browsers receive. There is no
-  bidirectional pump, so the browser cannot send anything back to a warrior
-  through this channel.
-
 ## Local development
 
 ```sh
@@ -160,11 +109,3 @@ make run CONFIG=$PWD/config.yaml
 ```
 
 Open <http://localhost:8080>.
-
-
-## Theming
-
-Styling lives in `web/assets/user/user.css`. Drop in one of the theme files in
-`web/assets/user/themes/` (lcars-picard, lcars-tng, light, metro) by copying
-its `user.css` over the default. Per-instance log lines are tagged with the
-warrior name as a CSS class (`#console p:has(.warrior-1) { ... }`).
