@@ -23,7 +23,7 @@ dashboard:
   deployment: 
     image:
       repository: "jordanbmoore/atw-dashboard"
-      tag: "v0.1.0"
+      tag: "v0.1.1"
     annotations: {}
 
     # When true, an init container blocks the dashboard pod until every warrior # StatefulSet's pods are Ready. Requires RBAC resources (ServiceAccount,
