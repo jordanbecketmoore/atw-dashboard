@@ -4,10 +4,9 @@ metadata:
   name: atw-dashboard
   labels:
     app.kubernetes.io/name: atw-dashboard
-  annotations:
-    {{- range .Values.dashboard.deployment.annotations }}
-    {{ .key }}: {{ .value | quote }}
-    {{- end }}
+  {{- with .Values.dashboard.deployment.annotations }}
+  annotations: {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
   # Hub state is in-memory and warrior connections are stateful — do not scale > 1.
   replicas: 1
