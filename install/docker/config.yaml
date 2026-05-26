@@ -6,5 +6,11 @@ nickname: "your-nickname"
 # reconnect_max: 60s
 
 warriors:
-  - name: warrior-1
-    url: http://atw-warrior-1:8001
+  - name: telegram-1
+    url: http://atw-telegram-1:8001
+  - name: telegram-2
+    url: http://atw-telegram-2:8001
+  - name: usgovernment-1
+    url: http://atw-usgovernment-1:8001
+  - name: usgovernment-2
+    url: http://atw-usgovernment-2:8001

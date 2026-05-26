@@ -16,21 +16,32 @@ services:
     - /var/run/docker.sock:/var/run/docker.sock
     image: nickfedor/watchtower
     command: --label-enable --cleanup --include-restarting --interval 3600
-  warrior:
+  telegram:
     labels:
         - com.centurylinklabs.watchtower.enable=true
     restart: unless-stopped
     image: atdr.meo.ws/archiveteam/warrior-dockerfile
     environment:
       - SELECTED_PROJECT=telegram
-      - DOWNLOADER=blue_electron
-      - WARRIOR_ID=
+      - DOWNLOADER=your-nickname
       - CONCURRENT_ITEMS=
     deploy:
       mode: replicated
-      replicas: 1
-    ports:
-    - "8001:8001"
+      replicas: 2
+    networks:
+      - atw
+  usgovernment:
+    labels:
+        - com.centurylinklabs.watchtower.enable=true
+    restart: unless-stopped
+    image: atdr.meo.ws/archiveteam/warrior-dockerfile
+    environment:
+      - SELECTED_PROJECT=usgovernment
+      - DOWNLOADER=your-nickname
+      - CONCURRENT_ITEMS=
+    deploy:
+      mode: replicated
+      replicas: 2
     networks:
       - atw
 networks:
