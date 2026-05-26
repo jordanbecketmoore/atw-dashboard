@@ -91,21 +91,3 @@ warriors:
   - name: warrior-2
     url: http://warrior-2.warriors.svc.cluster.local:8001
 ```
-
-## Local development
-
-```sh
-make tidy
-make test
-make build           # produces bin/atw-dashboard
-make run-local CONFIG=$PWD/config.yaml
-```
-
-Or with Docker:
-
-```sh
-make docker
-make run CONFIG=$PWD/config.yaml
-```
-
-Open <http://localhost:8080>.
