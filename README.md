@@ -1,6 +1,6 @@
 # Archive Team Warrior Dashboard
 
-> **Note:** This repository contains AI-generated code.
+> **Note:** This repository contains AI-generated code. The Go backend server was AI-generated and then cleaned and tweaked by hand. 
 
 ![Screenshot of a dashboard with multiple line graphs for bandwidth](screenshots/screenshot.png)
 
@@ -38,7 +38,8 @@ To see available versions, check the [releases page](https://github.com/jordanbe
 **Install from local chart:**
 
 ```sh
-helm install atw ./chart -f my-values.yaml
+git clone git@github.com:jordanbecketmoore/atw-dashboard.git
+helm install atw .atw-dashboard/install/helm
 ```
 
 Minimal `values.yaml`:
