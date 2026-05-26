@@ -1,3 +1,4 @@
+name: atw
 services:
   atw-dashboard:
     image: jordanbmoore/atw-dashboard
@@ -6,6 +7,8 @@ services:
     volumes:
     - ./config.yaml:/etc/atw-dashboard/config.yaml:ro
     restart: unless-stopped
+    networks:
+      - atw
   watchtower:
     container_name: watchtower
     restart: unless-stopped
@@ -19,10 +22,16 @@ services:
     restart: unless-stopped
     image: atdr.meo.ws/archiveteam/warrior-dockerfile
     environment:
-      - SELECTED_PROJECT=usgovernment
+      - SELECTED_PROJECT=telegram
+      - DOWNLOADER=blue_electron
       - WARRIOR_ID=
-      - DOWNLOADER=
       - CONCURRENT_ITEMS=
     deploy:
       mode: replicated
-      replicas: 2
+      replicas: 1
+    ports:
+    - "8001:8001"
+    networks:
+      - atw
+networks:
+  atw: {}

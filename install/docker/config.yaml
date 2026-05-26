@@ -6,7 +6,5 @@ nickname: "your-nickname"
 # reconnect_max: 60s
 
 warriors:
-  - name: warrior-0
-    url: http://warrior-0:8001
   - name: warrior-1
-    url: http://warrior-1:8001
+    url: http://atw-warrior-1:8001
