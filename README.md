@@ -19,6 +19,8 @@ cd atw-dashboard/install/docker
 docker compose up -d
 ```
 
+THen view the dashboard at [http://localhost:8080](http://localhost:8080).
+
 ## Kubernetes Installation
 
 A Helm chart is provided in `install/helm/` and published to GHCR as an OCI artifact.
