@@ -5,7 +5,7 @@ metadata:
   labels:
     app.kubernetes.io/name: atw-dashboard
   annotations:
-    {{- range .Values.dashboard.annotations }}
+    {{- range .Values.dashboard.deployment.annotations }}
     {{ .key }}: {{ .value | quote }}
     {{- end }}
 spec:
