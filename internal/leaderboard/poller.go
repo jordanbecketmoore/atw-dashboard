@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sort"
 	"time"
 
 	"github.com/jordanm/atw-dashboard/internal/hub"
@@ -86,11 +87,23 @@ func (p *Poller) fetchProject(ctx context.Context, project string) (*hub.Project
 		Project: project,
 		Total:   len(raw.Downloaders),
 	}
-	for i, name := range raw.Downloaders {
-		if name == p.nickname {
+
+	type entry struct {
+		name  string
+		bytes float64
+	}
+	entries := make([]entry, 0, len(raw.DownloaderBytes))
+	for name, bytes := range raw.DownloaderBytes {
+		entries = append(entries, entry{name, bytes})
+	}
+	sort.Slice(entries, func(i, j int) bool {
+		return entries[i].bytes > entries[j].bytes
+	})
+	for i, e := range entries {
+		if e.name == p.nickname {
 			stats.Position = i + 1
-			stats.Bytes = uint64(raw.DownloaderBytes[name])
-			stats.Items = raw.DownloaderCount[name]
+			stats.Bytes = uint64(e.bytes)
+			stats.Items = raw.DownloaderCount[e.name]
 			break
 		}
 	}
