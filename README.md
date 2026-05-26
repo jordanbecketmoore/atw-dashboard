@@ -9,21 +9,6 @@ client-side SPA, this version splits into a Go backend and a static frontend.
 Deploy conveniently alongside a your warriors on Docker using the docker
 compose stack or on Kubernetes with the Helm chart. 
 
-## Configuration
-
-The backend reads YAML from `-config` (default `/etc/atw-dashboard/config.yaml`).
-See `config.example.yaml`:
-
-```yaml
-listen_addr: ":8080"
-nickname: "your-nickname"          # operator nick used for leaderboard lookups
-leaderboard_interval: 5m
-warriors:
-  - name: warrior-1
-    url: http://warrior-1.warriors.svc.cluster.local:8001
-  - name: warrior-2
-    url: http://warrior-2.warriors.svc.cluster.local:8001
-```
 
 ## Docker Installation
 
@@ -45,10 +30,10 @@ cluster-internal network).
 **Install from OCI (recommended):**
 
 ```sh
-helm install atw oci://ghcr.io/jordanbmoore/atw-dashboard --version <version> -f my-values.yaml
+helm install atw oci://ghcr.io/jordanbecketmoore/atw-dashboard --version <version> -f my-values.yaml
 ```
 
-To see available versions, check the [releases page](https://github.com/jordanbmoore/atw-dashboard/releases).
+To see available versions, check the [releases page](https://github.com/jordanbecketmoore/atw-dashboard/releases).
 
 **Install from local chart:**
 
@@ -90,6 +75,23 @@ Notes:
   `dashboard.httproute.enabled`. Bring your own `Gateway`.
 - Warrior Services are cluster-internal only — they are not exposed via the
   HTTPRoute.
+
+## Configuration
+
+The backend reads YAML from `-config` (default `/etc/atw-dashboard/config.yaml`).
+See `config.example.yaml`:
+
+```yaml
+listen_addr: ":8080"
+nickname: "your-nickname"          # operator nick used for leaderboard lookups
+leaderboard_interval: 5m
+warriors:
+  - name: warrior-1
+    url: http://warrior-1.warriors.svc.cluster.local:8001
+  - name: warrior-2
+    url: http://warrior-2.warriors.svc.cluster.local:8001
+```
+
 ## Architecture
 
 ```
