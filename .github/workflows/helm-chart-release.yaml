@@ -24,7 +24,7 @@ jobs:
 
       - name: Verify Chart.yaml version matches tag
         run: |
-          chart_version=$(grep '^version:' install/helmchart/Chart.yaml | awk '{print $2}')
+          chart_version=$(grep '^version:' install/helm/Chart.yaml | awk '{print $2}')
           tag_version="${{ steps.version.outputs.version }}"
           if [ "$chart_version" != "$tag_version" ]; then
             echo "Chart.yaml version ($chart_version) does not match tag version ($tag_version)"
@@ -32,7 +32,7 @@ jobs:
           fi
 
       - name: Package chart
-        run: helm package install/helmchart/ --destination .helm-output/
+        run: helm package install/helm/ --destination .helm-output/
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
