@@ -22,6 +22,15 @@ jobs:
         id: version
         uses: ./.github/actions/resolve-version
 
+      - name: Verify Chart.yaml version matches tag
+        run: |
+          chart_version=$(grep '^version:' install/helmchart/Chart.yaml | awk '{print $2}')
+          tag_version="${{ steps.version.outputs.version }}"
+          if [ "$chart_version" != "$tag_version" ]; then
+            echo "Chart.yaml version ($chart_version) does not match tag version ($tag_version)"
+            exit 1
+          fi
+
       - name: Package chart
         run: helm package install/helmchart/ --destination .helm-output/
 
