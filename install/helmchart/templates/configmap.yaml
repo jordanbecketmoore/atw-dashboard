@@ -16,3 +16,6 @@ data:
         url: http://{{ $project.name }}-warrior-{{ $i }}:8001
 {{- end }}
 {{- end }}
+{{- if .Values.warriors.extraWarriors }}
+{{ toYaml .Values.warriors.extraWarriors | indent 6 }}
+{{- end }}

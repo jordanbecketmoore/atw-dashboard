@@ -11,6 +11,9 @@ warriors:
       replicas: 1
       # Optional: set CONCURRENT_ITEMS for this project
       # concurrent_items: 6
+  # Optional: add extra warriors here which aren't automatically generated from the projects list.
+  extraWarriors: []
+
 
   service:
     # Extra annotations applied to every per-warrior Service.
